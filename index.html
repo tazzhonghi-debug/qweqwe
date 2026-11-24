@@ -1,21 +1,3388 @@
 <!doctype html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>럭키드로우 아케이드 — 다채로운 당첨자 추첨 미니게임</title>
-    <meta name="description" content="룰렛, 사다리 타기, 핀볼 레이스, 캡슐 뽑기, 카드 뒤집기 등 5가지 인터랙티브 미니게임으로 공정하고 재미있게 당첨자를 뽑는 파티 추첨 스튜디오입니다." />
-    <meta property="og:title" content="럭키드로우 아케이드 — 다채로운 당첨자 추첨 미니게임" />
-    <meta property="og:description" content="룰렛, 사다리 타기, 핀볼 레이스, 캡슐 뽑기, 카드 뒤집기 등 5가지 인터랙티브 미니게임으로 공정하고 재미있게 당첨자를 뽑는 파티 추첨 스튜디오입니다." />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+KR:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
-  </head>
-  <body class="bg-[#F6F6F3] text-[#161615] antialiased selection:bg-[#E04F33]/15 selection:text-[#E04F33]">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>럭키드로우 아케이드 — 다채로운 당첨자 추첨 미니게임</title>
+  <meta name="description" content="룰렛, 사다리 타기, 핀볼 레이스, 캡슐 뽑기, 카드 뒤집기 등 5가지 인터랙티브 미니게임으로 공정하고 재미있게 당첨자를 뽑는 파티 추첨 스튜디오입니다." />
+  <meta property="og:title" content="럭키드로우 아케이드 — 다채로운 당첨자 추첨 미니게임" />
+  <meta property="og:description" content="룰렛, 사다리 타기, 핀볼 레이스, 캡슐 뽑기, 카드 뒤집기 등 5가지 인터랙티브 미니게임으로 공정하고 재미있게 당첨자를 뽑는 파티 추첨 스튜디오입니다." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+KR:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-canvas: #F6F6F3;
+      --bg-surface: #FFFFFF;
+      --bg-subtle: #F9F9F7;
+      --bg-hover: #EFEFEA;
+      --bg-stage: #161B22;
+      --bg-stage-panel: #232A34;
+      --bg-stage-deep: #0F1318;
+      --border-light: #E4E4E0;
+      --border-stage: #252D38;
+      --border-stage-strong: #334155;
+      --text-primary: #161615;
+      --text-secondary: #666661;
+      --text-muted: #8E8E88;
+      --accent: #E04F33;
+      --accent-hover: #C94127;
+      --emerald: #10B981;
+      --amber: #F59E0B;
+      --danger: #DC2626;
+      --font-display: "Outfit", "Noto Sans KR", system-ui, -apple-system, sans-serif;
+      --font-sans: "Noto Sans KR", "Outfit", system-ui, -apple-system, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, monospace;
+    }
 
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-canvas);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    button, input, textarea {
+      font-family: inherit;
+    }
+
+    button:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Layout Shell */
+    .app-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Bar (Strict 3-Zone Contract) */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(246, 246, 243, 0.95);
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .topbar-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
+    }
+
+    .brand-mark {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      overflow-x: auto;
+    }
+
+    .nav-link {
+      position: relative;
+      background: none;
+      border: none;
+      padding: 10px 2px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: color 150ms ease;
+    }
+
+    .nav-link:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-link.active {
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+
+    .nav-link.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 2px;
+      background: var(--accent);
+    }
+
+    .history-btn {
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #FFFFFF;
+      background: var(--text-primary);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 150ms ease;
+    }
+
+    .history-btn:hover {
+      background: #2C2C2A;
+    }
+
+    .mobile-nav {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px 10px;
+      overflow-x: auto;
+      border-top: 1px solid rgba(228, 228, 224, 0.7);
+    }
+
+    .mobile-nav-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .mobile-nav-btn.active {
+      background: var(--text-primary);
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+
+    /* Workspace Grid */
+    .workspace {
+      flex: 1;
+      width: 100%;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 28px 24px;
+      display: grid;
+      grid-template-columns: 330px minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* Sidebar Panel */
+    .sidebar {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .sidebar-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .sidebar-count {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: background 150ms, color 150ms;
+    }
+
+    .icon-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    /* Forms & Controls */
+    .input-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .text-input {
+      flex: 1;
+      min-width: 0;
+      height: 40px;
+      padding: 0 12px;
+      font-size: 13.5px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      color: var(--text-primary);
+    }
+
+    .text-input:focus {
+      outline: none;
+      border-color: var(--text-primary);
+    }
+
+    .textarea-input {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 13.5px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      color: var(--text-primary);
+      resize: none;
+    }
+
+    .btn-dark {
+      height: 40px;
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #FFFFFF;
+      background: var(--text-primary);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-dark:hover:not(:disabled) {
+      background: #2C2C2A;
+    }
+
+    .btn-dark:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .sub-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+
+    .text-action {
+      background: none;
+      border: none;
+      padding: 2px 4px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .text-action:hover:not(:disabled) {
+      color: var(--text-primary);
+    }
+
+    .text-action.danger:hover:not(:disabled) {
+      color: var(--danger);
+    }
+
+    .text-action:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .presets-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .preset-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-right: 2px;
+    }
+
+    .preset-btn {
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #4A4A46;
+      background: #F3F3EF;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .preset-btn:hover:not(:disabled) {
+      background: #EAEAE3;
+    }
+
+    /* Rules Box */
+    .rules-box {
+      padding: 14px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .rule-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .rule-label {
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stepper-btn {
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #FFFFFF;
+      border: 1px solid var(--border-light);
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .stepper-btn:hover:not(:disabled) {
+      background: var(--bg-hover);
+    }
+
+    .stepper-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .stepper-val {
+      min-width: 34px;
+      text-align: center;
+      font-size: 13.5px;
+      font-weight: 700;
+    }
+
+    .switch-btn {
+      position: relative;
+      width: 38px;
+      height: 22px;
+      border-radius: 999px;
+      border: none;
+      background: #D4D4CE;
+      cursor: pointer;
+      transition: background 150ms ease;
+      flex-shrink: 0;
+    }
+
+    .switch-btn.on {
+      background: var(--accent);
+    }
+
+    .switch-knob {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      transition: transform 150ms ease;
+    }
+
+    .switch-btn.on .switch-knob {
+      transform: translateX(16px);
+    }
+
+    /* Participant List */
+    .participant-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 340px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .participant-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-light);
+      background: #FFFFFF;
+    }
+
+    .participant-item.inactive {
+      background: var(--bg-canvas);
+      border-color: transparent;
+      opacity: 0.55;
+    }
+
+    .participant-toggle {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: none;
+      padding: 0;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .color-check {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 800;
+      border: 1px solid transparent;
+    }
+
+    .participant-item.inactive .color-check {
+      background: #FFFFFF !important;
+      border-color: #C8C8C2;
+      color: transparent;
+    }
+
+    .participant-idx {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      width: 18px;
+      flex-shrink: 0;
+    }
+
+    .participant-name {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .participant-item.inactive .participant-name {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .participant-controls {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .weight-box {
+      display: flex;
+      align-items: center;
+      background: var(--bg-canvas);
+      border-radius: 6px;
+      padding: 2px 4px;
+    }
+
+    .weight-btn {
+      width: 20px;
+      height: 20px;
+      border: none;
+      background: none;
+      font-size: 12px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .weight-btn:hover:not(:disabled) {
+      color: var(--text-primary);
+    }
+
+    .weight-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .weight-val {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #4A4A46;
+      padding: 0 4px;
+    }
+
+    .del-btn {
+      background: none;
+      border: none;
+      padding: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .del-btn:hover:not(:disabled) {
+      color: var(--danger);
+    }
+
+    .btn-subtle-full {
+      width: 100%;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: #F3F3EF;
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-subtle-full:hover {
+      background: #EAEAE3;
+    }
+
+    /* Main Stage Section */
+    .stage-column {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-width: 0;
+    }
+
+    .stage-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 2px;
+    }
+
+    .stage-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(24px, 3vw, 30px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      text-wrap: balance;
+    }
+
+    .stage-desc {
+      margin: 4px 0 0;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .stage-meta {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .stage-card {
+      background: var(--bg-stage);
+      color: #FFFFFF;
+      border: 1px solid var(--border-stage);
+      border-radius: 18px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .stage-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .stage-hint {
+      font-size: 13.5px;
+      color: #94A3B8;
+    }
+
+    .seg-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      background: var(--bg-stage-panel);
+      border-radius: 9px;
+    }
+
+    .seg-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: #94A3B8;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 150ms, color 150ms;
+    }
+
+    .seg-btn:hover:not(:disabled) {
+      color: #FFFFFF;
+    }
+
+    .seg-btn.active {
+      background: var(--accent);
+      color: #FFFFFF;
+    }
+
+    .dark-chip-btn {
+      padding: 7px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      background: var(--bg-stage-panel);
+      color: #CBD5E1;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .dark-chip-btn:hover:not(:disabled) {
+      background: #2E3744;
+    }
+
+    .dark-chip-btn.active {
+      background: var(--accent);
+      color: #FFFFFF;
+    }
+
+    .dark-chip-btn.amber {
+      background: var(--amber);
+      color: #161615;
+    }
+
+    .dark-chip-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .primary-cta {
+      min-width: 220px;
+      height: 48px;
+      padding: 0 28px;
+      border: none;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #FFFFFF;
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 150ms ease;
+    }
+
+    .primary-cta:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .primary-cta:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .primary-cta.emerald {
+      background: var(--emerald);
+    }
+
+    .primary-cta.emerald:hover:not(:disabled) {
+      background: #059669;
+    }
+
+    .cta-center {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    /* Wheel Stage */
+    .wheel-readout {
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .wheel-readout-box {
+      padding: 6px 16px;
+      border-radius: 8px;
+      background: var(--bg-stage-panel);
+      border: 1px solid var(--border-stage-strong);
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .canvas-wrap {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
+
+    #wheel-canvas {
+      width: 100%;
+      max-width: 440px;
+      aspect-ratio: 1 / 1;
+      display: block;
+    }
+
+    #pinball-canvas {
+      width: 100%;
+      max-width: 640px;
+      aspect-ratio: 640 / 500;
+      border-radius: 12px;
+      border: 1px solid #2A3340;
+      display: block;
+    }
+
+    .winner-strip {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--bg-stage-panel);
+      border-radius: 10px;
+    }
+
+    .mini-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: var(--bg-stage);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Ladder Stage */
+    .ladder-scroll {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+
+    .ladder-inner {
+      margin: 0 auto;
+    }
+
+    .ladder-row {
+      display: grid;
+      gap: 6px;
+      padding: 0 12px;
+    }
+
+    .ladder-top-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 4px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: #FFFFFF;
+      cursor: pointer;
+    }
+
+    .ladder-top-btn:hover:not(:disabled) {
+      background: var(--bg-stage-panel);
+    }
+
+    .ladder-top-name {
+      font-size: 12px;
+      font-weight: 600;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ladder-top-res {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--emerald);
+    }
+
+    .ladder-svg {
+      width: 100%;
+      height: 340px;
+      display: block;
+      user-select: none;
+    }
+
+    .ladder-outcome-input {
+      height: 36px;
+      padding: 0 6px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 8px;
+      border: 1px solid var(--border-stage-strong);
+      background: var(--bg-stage-panel);
+      color: #CBD5E1;
+      width: 100%;
+    }
+
+    .ladder-outcome-input.win {
+      background: rgba(224, 79, 51, 0.2);
+      border-color: var(--accent);
+      color: #FF947D;
+    }
+
+    /* Gacha Machine */
+    .gacha-machine {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0 auto;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    .gacha-cap {
+      width: 156px;
+      height: 20px;
+      background: var(--accent);
+      border-radius: 14px 14px 0 0;
+      border: 2px solid rgba(255, 140, 117, 0.45);
+    }
+
+    .gacha-dome {
+      position: relative;
+      width: 264px;
+      height: 204px;
+      background: #1E2631;
+      border: 4px solid var(--border-stage-strong);
+      border-radius: 90px 90px 14px 14px;
+      padding: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    .gacha-dome.shaking {
+      animation: capsule-shake 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes capsule-shake {
+      0%, 100% { transform: translateX(0) rotate(0deg); }
+      20% { transform: translateX(-6px) rotate(-6deg); }
+      40% { transform: translateX(6px) rotate(6deg); }
+      60% { transform: translateX(-4px) rotate(-4deg); }
+      80% { transform: translateX(4px) rotate(4deg); }
+    }
+
+    .gacha-ball {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.85);
+      overflow: hidden;
+      transition: transform 250ms ease;
+    }
+
+    .gacha-ball-top {
+      height: 50%;
+      width: 100%;
+    }
+
+    .gacha-ball-bot {
+      height: 50%;
+      width: 100%;
+      background: #F8FAFC;
+    }
+
+    .gacha-body {
+      width: 292px;
+      background: var(--bg-stage-panel);
+      border: 4px solid var(--border-stage-strong);
+      border-top: none;
+      border-radius: 0 0 24px 24px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .gacha-dial {
+      position: relative;
+      width: 82px;
+      height: 82px;
+      border-radius: 50%;
+      background: var(--bg-stage);
+      border: 4px solid #475569;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: border-color 150ms;
+    }
+
+    .gacha-dial:hover:not(:disabled) {
+      border-color: var(--accent);
+    }
+
+    .gacha-dial:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .gacha-dial-bar {
+      width: 56px;
+      height: 14px;
+      background: var(--accent);
+      border-radius: 999px;
+      transition: transform 480ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .gacha-dial-center {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      border: 2px solid var(--bg-stage);
+    }
+
+    .gacha-tray {
+      width: 100%;
+      min-height: 112px;
+      background: var(--bg-stage-deep);
+      border: 2px solid var(--border-stage-strong);
+      border-radius: 16px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .gacha-drop-btn {
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .gacha-drop-ball {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 3px solid #FFFFFF;
+      overflow: hidden;
+      transition: transform 150ms ease;
+    }
+
+    .gacha-drop-btn:hover .gacha-drop-ball {
+      transform: scale(1.06);
+    }
+
+    /* 3D Cards Stage */
+    .turn-banner {
+      padding: 10px 16px;
+      background: var(--bg-stage-panel);
+      border-radius: 10px;
+      font-size: 13.5px;
+      color: #CBD5E1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card-btn {
+      perspective: 1000px;
+      height: 120px;
+      width: 100%;
+      padding: 0;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .card-btn:disabled {
+      cursor: default;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 480ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .card-btn.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .card-back {
+      background: var(--bg-stage-panel);
+      border: 2px solid var(--border-stage-strong);
+      color: #94A3B8;
+    }
+
+    .card-btn:not(.flipped):not(:disabled):hover .card-back {
+      border-color: var(--accent);
+    }
+
+    .card-num {
+      font-family: var(--font-mono);
+      font-size: 18px;
+      font-weight: 700;
+      color: #64748B;
+    }
+
+    .card-front {
+      transform: rotateY(180deg);
+      background: #FFFFFF;
+      color: var(--text-primary);
+      border: 2px solid var(--accent);
+    }
+
+    .card-front.lose {
+      background: #1E242C;
+      color: #64748B;
+      border-color: var(--border-stage-strong);
+    }
+
+    .card-front-name {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Modals & Drawers */
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(2px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-card {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-light);
+      border-radius: 18px;
+      padding: 26px;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 34px;
+      height: 34px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    .modal-close:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover);
+    }
+
+    .trophy-box {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: #FEF3C7;
+      color: #D97706;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 14px;
+    }
+
+    .modal-meta {
+      margin: 0 0 4px;
+      text-align: center;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+    }
+
+    .modal-title {
+      margin: 0 0 20px;
+      text-align: center;
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .modal-winners {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 240px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+    }
+
+    .modal-winner-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(0, 0, 0, 0.42);
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .drawer {
+      width: 100%;
+      max-width: 420px;
+      height: 100%;
+      background: #FFFFFF;
+      border-left: 1px solid var(--border-light);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer-head {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .history-card {
+      padding: 14px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+      .cards-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+      .mobile-nav {
+        display: flex;
+      }
+      .topbar-inner {
+        padding: 0 16px;
+        gap: 16px;
+      }
+      .workspace {
+        padding: 18px 16px;
+      }
+      .stage-card {
+        padding: 18px;
+      }
+      .cards-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Bar: Strict 3-Zone Contract -->
+    <header class="topbar">
+      <div class="topbar-inner">
+        <button type="button" id="brand-btn" class="brand-mark">럭키드로우</button>
+
+        <nav class="nav-links" aria-label="미니게임 선택" id="desktop-nav"></nav>
+
+        <button type="button" id="open-history-btn" class="history-btn tabular-nums">
+          당첨 기록 (0)
+        </button>
+      </div>
+      <nav class="mobile-nav" aria-label="모바일 미니게임 선택" id="mobile-nav"></nav>
+    </header>
+
+    <!-- Main 2-Column Workspace -->
+    <main class="workspace">
+      <!-- Left Participant Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-title-wrap">
+            <h2 class="sidebar-title">참가자 명단</h2>
+            <span id="participant-count-label" class="sidebar-count tabular-nums">6 / 6명 참여</span>
+          </div>
+          <button type="button" id="mute-btn" class="icon-btn" aria-label="효과음 켜기/끄기" title="효과음 켜기/끄기"></button>
+        </div>
+
+        <!-- Single or Bulk Input -->
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <form id="single-add-form" class="input-row">
+            <input type="text" id="single-name-input" class="text-input" placeholder="이름 입력 (쉼표로 여러 명 가능)" />
+            <button type="submit" id="single-add-btn" class="btn-dark">추가</button>
+          </form>
+
+          <div id="bulk-add-box" class="hidden" style="display:flex; flex-direction:column; gap:8px;">
+            <textarea id="bulk-name-input" rows="4" class="textarea-input" placeholder="줄바꿈 또는 쉼표(,)로 구분하여 여러 명을 한 번에 입력하세요."></textarea>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+              <button type="button" id="bulk-cancel-btn" class="text-action">취소</button>
+              <button type="button" id="bulk-confirm-btn" class="btn-dark" style="height:32px; font-size:12px;">명단에 추가</button>
+            </div>
+          </div>
+
+          <div class="sub-actions">
+            <button type="button" id="toggle-bulk-btn" class="text-action">여러 명 붙여넣기</button>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <button type="button" id="shuffle-list-btn" class="text-action">섞기</button>
+              <span style="color:#D4D4CE;" aria-hidden="true">·</span>
+              <button type="button" id="clear-list-btn" class="text-action danger">비우기</button>
+            </div>
+          </div>
+
+          <div class="presets-row" id="presets-row">
+            <span class="preset-label">예시:</span>
+          </div>
+        </div>
+
+        <!-- Draw Rules -->
+        <div class="rules-box">
+          <div class="rule-row">
+            <span class="rule-label">뽑을 당첨자 수</span>
+            <div class="stepper">
+              <button type="button" id="winner-minus-btn" class="stepper-btn" aria-label="당첨자 수 감소">-</button>
+              <span id="winner-count-val" class="stepper-val tabular-nums">1명</span>
+              <button type="button" id="winner-plus-btn" class="stepper-btn" aria-label="당첨자 수 증가">+</button>
+            </div>
+          </div>
+
+          <div class="rule-row">
+            <span style="font-size:12.5px; color:#4A4A46; font-weight:500;">당첨된 참가자 자동 제외</span>
+            <button type="button" id="exclude-switch" role="switch" aria-checked="false" class="switch-btn">
+              <span class="switch-knob"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Participant List -->
+        <div id="participant-list" class="participant-list"></div>
+
+        <button type="button" id="restore-all-btn" class="btn-subtle-full hidden"></button>
+
+        <div style="padding-top:10px; border-top:1px solid var(--border-light);">
+          <button type="button" id="download-html-btn" class="btn-subtle-full">
+            HTML 파일로 저장
+          </button>
+        </div>
+      </aside>
+
+      <!-- Right Game Stage -->
+      <section class="stage-column">
+        <div class="stage-header">
+          <div>
+            <h1 id="stage-title" class="stage-title">행운의 룰렛</h1>
+            <p id="stage-desc" class="stage-desc"></p>
+          </div>
+          <div id="stage-meta" class="stage-meta tabular-nums"></div>
+        </div>
+
+        <!-- Dynamic Game Container -->
+        <div id="game-stage" class="stage-card"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Winner Modal -->
+  <div id="winner-modal" class="backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="winner-modal-title">
+    <div class="modal-card">
+      <button type="button" id="modal-close-btn" class="modal-close" aria-label="창 닫기">×</button>
+      <div class="trophy-box" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+      </div>
+      <p id="modal-meta" class="modal-meta"></p>
+      <h3 id="winner-modal-title" class="modal-title">당첨을 축하합니다</h3>
+      <div id="modal-winners-list" class="modal-winners"></div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div class="modal-actions">
+          <button type="button" id="modal-copy-btn" class="btn-subtle-full" style="height:44px; font-size:13.5px;">결과 복사</button>
+          <button type="button" id="modal-replay-btn" class="primary-cta" style="flex:1; min-width:0; height:44px; font-size:14px;">다시 뽑기</button>
+        </div>
+        <button type="button" id="modal-exclude-btn" class="btn-subtle-full hidden" style="height:40px;">
+          당첨자 명단에서 제외하고 이어서 뽑기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Drawer -->
+  <div id="history-drawer" class="drawer-backdrop hidden">
+    <div class="drawer" role="dialog" aria-modal="true" aria-label="당첨 기록">
+      <div class="drawer-head">
+        <div>
+          <h2 style="margin:0; font-family:var(--font-display); font-size:18px; font-weight:700;">당첨 기록</h2>
+          <p id="history-sub" style="margin:2px 0 0; font-size:12px; color:var(--text-secondary);" class="tabular-nums">총 0건의 추첨 결과</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button type="button" id="clear-history-btn" class="text-action danger">전체 삭제</button>
+          <button type="button" id="close-history-btn" class="icon-btn" aria-label="기록 닫기" style="font-size:18px;">×</button>
+        </div>
+      </div>
+      <div id="history-list" class="drawer-body"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const GAME_COLORS = [
+        '#E04F33', '#2563EB', '#0D9488', '#D97706',
+        '#4F46E5', '#DB2777', '#059669', '#7C3AED',
+        '#EA580C', '#0284C7', '#B45309', '#BE185D'
+      ];
+
+      const GAME_MODES = [
+        { id: 'wheel', label: '행운의 룰렛', shortLabel: '룰렛 돌리기', desc: '가중치 설정이 가능한 원형 룰렛을 돌려 단번에 당첨자를 뽑습니다.' },
+        { id: 'ladder', label: '사다리 타기', shortLabel: '사다리 타기', desc: '참가자와 당첨 항목을 연결해 긴장감 있게 경로를 추적합니다.' },
+        { id: 'pinball', label: '핀볼 레이스', shortLabel: '핀볼 레이스', desc: '물리 엔진 장애물을 뚫고 결승선을 통과하는 구슬로 승자를 정합니다.' },
+        { id: 'gacha', label: '캡슐 뽑기', shortLabel: '캡슐 뽑기', desc: '다이얼을 돌려 굴러 나온 캡슐을 열어 당첨자를 확인합니다.' },
+        { id: 'cards', label: '미스터리 카드', shortLabel: '카드 뒤집기', desc: '무작위로 섞인 카드를 직접 뒤집어 당첨과 꽝을 가려냅니다.' }
+      ];
+
+      const PRESETS = [
+        { label: '커피 내기 6인', names: ['김민수', '이서연', '박지훈', '최유진', '정현우', '강하은'] },
+        { label: '팀 회식 8인', names: ['기획 지수', '개발 태오', '디자인 민지', '마케팅 준호', '운영 수빈', '데이터 도윤', '보안 채원', 'PM 시우'] },
+        { label: '번호 1~12', names: ['1번', '2번', '3번', '4번', '5번', '6번', '7번', '8번', '9번', '10번', '11번', '12번'] }
+      ];
+
+      const STORAGE = {
+        PARTICIPANTS: 'luckydraw_html_participants_v1',
+        HISTORY: 'luckydraw_html_history_v1'
+      };
+
+      function makeParticipants(names, offset) {
+        return names.map((name, i) => ({
+          id: 'p-' + Date.now() + '-' + (offset + i) + '-' + Math.random().toString(36).slice(2, 6),
+          name: name,
+          weight: 1,
+          active: true,
+          color: GAME_COLORS[(offset + i) % GAME_COLORS.length]
+        }));
+      }
+
+      function loadJSON(key, fallback) {
+        try {
+          const raw = localStorage.getItem(key);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) return parsed;
+          }
+        } catch (e) {}
+        return fallback;
+      }
+
+      const state = {
+        mode: 'wheel',
+        participants: loadJSON(STORAGE.PARTICIPANTS, makeParticipants(PRESETS[0].names, 0)),
+        history: loadJSON(STORAGE.HISTORY, []),
+        winnerCount: 1,
+        excludeWinners: false,
+        muted: false,
+        running: false,
+        latestRecord: null,
+        cleanupGame: null
+      };
+
+      if (state.participants.length === 0) {
+        state.participants = makeParticipants(PRESETS[0].names, 0);
+      }
+
+      function saveStorage() {
+        try {
+          localStorage.setItem(STORAGE.PARTICIPANTS, JSON.stringify(state.participants));
+          localStorage.setItem(STORAGE.HISTORY, JSON.stringify(state.history));
+        } catch (e) {}
+      }
+
+      function getActive() {
+        return state.participants.filter(p => p.active);
+      }
+
+      // Web Audio API Sound Engine
+      const Sound = {
+        ctx: null,
+        getCtx() {
+          if (state.muted) return null;
+          if (!this.ctx) {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (AC) this.ctx = new AC();
+          }
+          if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume().catch(() => {});
+          }
+          return this.ctx;
+        },
+        tick(pitch) {
+          const ctx = this.getCtx();
+          if (!ctx) return;
+          const now = ctx.currentTime;
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = 'triangle';
+          o.frequency.setValueAtTime(520 * (pitch || 1), now);
+          o.frequency.exponentialRampToValueAtTime(180 * (pitch || 1), now + 0.03);
+          g.gain.setValueAtTime(0.08, now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+          o.connect(g); g.connect(ctx.destination);
+          o.start(now); o.stop(now + 0.04);
+        },
+        bounce(vel) {
+          const ctx = this.getCtx();
+          if (!ctx) return;
+          const now = ctx.currentTime;
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          const f = 320 + Math.min(vel, 8) * 45;
+          o.type = 'sine';
+          o.frequency.setValueAtTime(f, now);
+          o.frequency.exponentialRampToValueAtTime(f * 1.4, now + 0.045);
+          g.gain.setValueAtTime(Math.min(0.07, 0.02 + vel * 0.008), now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+          o.connect(g); g.connect(ctx.destination);
+          o.start(now); o.stop(now + 0.065);
+        },
+        step(i) {
+          const ctx = this.getCtx();
+          if (!ctx) return;
+          const scale = [392, 440, 493.88, 523.25, 587.33, 659.25];
+          const now = ctx.currentTime;
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = 'sine';
+          o.frequency.setValueAtTime(scale[i % scale.length], now);
+          g.gain.setValueAtTime(0.05, now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+          o.connect(g); g.connect(ctx.destination);
+          o.start(now); o.stop(now + 0.075);
+        },
+        flip() {
+          const ctx = this.getCtx();
+          if (!ctx) return;
+          const now = ctx.currentTime;
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = 'sine';
+          o.frequency.setValueAtTime(280, now);
+          o.frequency.exponentialRampToValueAtTime(560, now + 0.08);
+          g.gain.setValueAtTime(0.07, now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+          o.connect(g); g.connect(ctx.destination);
+          o.start(now); o.stop(now + 0.1);
+        },
+        capsuleDrop() {
+          const ctx = this.getCtx();
+          if (!ctx) return;
+          const now = ctx.currentTime;
+          [260, 195, 340].forEach((freq, i) => {
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(freq, now + i * 0.09);
+            g.gain.setValueAtTime(0.08, now + i * 0.09);
+            g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.08);
+            o.connect(g); g.connect(ctx.destination);
+            o.start(now + i * 0.09); o.stop(now + i * 0.09 + 0.085);
+          });
+        },
+        win() {
+          const ctx = this.getCtx();
+          if (!ctx) return;
+          const now = ctx.currentTime;
+          [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            const s = now + idx * 0.07;
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(freq, s);
+            g.gain.setValueAtTime(0.001, s);
+            g.gain.linearRampToValueAtTime(0.09, s + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.001, s + 0.48);
+            o.connect(g); g.connect(ctx.destination);
+            o.start(s); o.stop(s + 0.5);
+          });
+        }
+      };
+
+      // Confetti
+      function launchConfetti() {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const canvas = document.createElement('canvas');
+        canvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999;';
+        document.body.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = window.innerWidth * dpr;
+        canvas.height = window.innerHeight * dpr;
+        ctx.scale(dpr, dpr);
+
+        const particles = Array.from({ length: 85 }, (_, i) => {
+          const ang = Math.random() * Math.PI * 2;
+          const spd = 4 + Math.random() * 11;
+          return {
+            x: window.innerWidth * 0.5 + (Math.random() - 0.5) * 80,
+            y: window.innerHeight * 0.42 + (Math.random() - 0.5) * 40,
+            vx: Math.cos(ang) * spd,
+            vy: Math.sin(ang) * spd - 4.5,
+            size: 6 + Math.random() * 6,
+            color: GAME_COLORS[i % GAME_COLORS.length],
+            rot: Math.random() * Math.PI * 2,
+            vRot: (Math.random() - 0.5) * 0.25,
+            alpha: 1
+          };
+        });
+
+        let frame = 0;
+        function step() {
+          frame++;
+          ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+          for (const p of particles) {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.34;
+            p.vx *= 0.985;
+            p.rot += p.vRot;
+            if (frame > 65) p.alpha = Math.max(0, 1 - (frame - 65) / 45);
+            ctx.save();
+            ctx.globalAlpha = p.alpha;
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.size / 2, -p.size * 0.3, p.size, p.size * 0.6);
+            ctx.restore();
+          }
+          if (frame < 110) requestAnimationFrame(step);
+          else canvas.remove();
+        }
+        requestAnimationFrame(step);
+      }
+
+      // Escape HTML helper
+      function esc(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      // Complete Draw Handler
+      function completeDraw(winners, prizeMap) {
+        state.running = false;
+        if (!winners || winners.length === 0) {
+          renderAll();
+          return;
+        }
+        Sound.win();
+        launchConfetti();
+
+        const modeInfo = GAME_MODES.find(m => m.id === state.mode) || GAME_MODES[0];
+        const activeCount = getActive().length;
+        const record = {
+          id: 'draw-' + Date.now(),
+          timestamp: Date.now(),
+          mode: state.mode,
+          modeLabel: modeInfo.label,
+          participantCount: activeCount,
+          winners: winners.map(w => ({
+            id: w.id,
+            name: w.name,
+            color: w.color,
+            prize: prizeMap ? prizeMap[w.id] : undefined
+          }))
+        };
+
+        state.history.unshift(record);
+        if (state.history.length > 50) state.history.length = 50;
+        state.latestRecord = record;
+
+        if (state.excludeWinners) {
+          const winIds = new Set(winners.map(w => w.id));
+          state.participants.forEach(p => {
+            if (winIds.has(p.id)) p.active = false;
+          });
+        }
+
+        saveStorage();
+        renderShellUI();
+        openWinnerModal(record);
+      }
+
+      // Render Navigation & Sidebar
+      function renderNav() {
+        const desktopNav = document.getElementById('desktop-nav');
+        const mobileNav = document.getElementById('mobile-nav');
+        desktopNav.innerHTML = '';
+        mobileNav.innerHTML = '';
+
+        GAME_MODES.forEach(m => {
+          const b1 = document.createElement('button');
+          b1.type = 'button';
+          b1.className = 'nav-link' + (state.mode === m.id ? ' active' : '');
+          b1.textContent = m.shortLabel;
+          b1.onclick = () => {
+            if (state.running) return;
+            state.mode = m.id;
+            renderAll();
+          };
+          desktopNav.appendChild(b1);
+
+          const b2 = document.createElement('button');
+          b2.type = 'button';
+          b2.className = 'mobile-nav-btn' + (state.mode === m.id ? ' active' : '');
+          b2.textContent = m.shortLabel;
+          b2.onclick = () => {
+            if (state.running) return;
+            state.mode = m.id;
+            renderAll();
+          };
+          mobileNav.appendChild(b2);
+        });
+      }
+
+      function renderShellUI() {
+        const active = getActive();
+        const maxWin = Math.max(1, active.length);
+        if (state.winnerCount > maxWin) state.winnerCount = maxWin;
+
+        document.getElementById('open-history-btn').textContent = `당첨 기록 (${state.history.length})`;
+        document.getElementById('participant-count-label').textContent = `${active.length} / ${state.participants.length}명 참여`;
+        document.getElementById('winner-count-val').textContent = `${state.winnerCount}명`;
+
+        const muteBtn = document.getElementById('mute-btn');
+        muteBtn.innerHTML = state.muted
+          ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>'
+          : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';
+
+        const exSwitch = document.getElementById('exclude-switch');
+        exSwitch.className = 'switch-btn' + (state.excludeWinners ? ' on' : '');
+        exSwitch.setAttribute('aria-checked', String(state.excludeWinners));
+
+        document.getElementById('winner-minus-btn').disabled = state.running || state.winnerCount <= 1;
+        document.getElementById('winner-plus-btn').disabled = state.running || state.winnerCount >= maxWin;
+        document.getElementById('single-name-input').disabled = state.running;
+        document.getElementById('single-add-btn').disabled = state.running;
+        document.getElementById('shuffle-list-btn').disabled = state.running || state.participants.length < 2;
+        document.getElementById('clear-list-btn').disabled = state.running || state.participants.length === 0;
+
+        // Render list
+        const listEl = document.getElementById('participant-list');
+        listEl.innerHTML = '';
+        if (state.participants.length === 0) {
+          const empty = document.createElement('div');
+          empty.style.cssText = 'padding:36px 12px;text-align:center;font-size:13.5px;color:#8E8E88;';
+          empty.textContent = '참가자가 없습니다. 이름을 추가하거나 예시 명단을 불러오세요.';
+          listEl.appendChild(empty);
+        } else {
+          state.participants.forEach((p, idx) => {
+            const row = document.createElement('div');
+            row.className = 'participant-item' + (p.active ? '' : ' inactive');
+
+            const toggleBtn = document.createElement('button');
+            toggleBtn.type = 'button';
+            toggleBtn.className = 'participant-toggle';
+            toggleBtn.disabled = state.running;
+            toggleBtn.innerHTML = `
+              <span class="color-check" style="background:${p.color};">${p.active ? '✓' : ''}</span>
+              <span class="participant-idx tabular-nums">${String(idx + 1).padStart(2, '0')}</span>
+              <span class="participant-name">${esc(p.name)}</span>
+            `;
+            toggleBtn.onclick = () => {
+              p.active = !p.active;
+              saveStorage();
+              renderAll();
+            };
+
+            const ctrl = document.createElement('div');
+            ctrl.className = 'participant-controls';
+
+            const wBox = document.createElement('div');
+            wBox.className = 'weight-box';
+            const wMinus = document.createElement('button');
+            wMinus.type = 'button';
+            wMinus.className = 'weight-btn';
+            wMinus.textContent = '-';
+            wMinus.disabled = state.running || p.weight <= 1;
+            wMinus.onclick = () => { p.weight = Math.max(1, p.weight - 1); saveStorage(); renderAll(); };
+
+            const wVal = document.createElement('span');
+            wVal.className = 'weight-val tabular-nums';
+            wVal.textContent = p.weight + 'x';
+
+            const wPlus = document.createElement('button');
+            wPlus.type = 'button';
+            wPlus.className = 'weight-btn';
+            wPlus.textContent = '+';
+            wPlus.disabled = state.running || p.weight >= 10;
+            wPlus.onclick = () => { p.weight = Math.min(10, p.weight + 1); saveStorage(); renderAll(); };
+
+            wBox.append(wMinus, wVal, wPlus);
+
+            const del = document.createElement('button');
+            del.type = 'button';
+            del.className = 'del-btn';
+            del.disabled = state.running;
+            del.setAttribute('aria-label', p.name + ' 삭제');
+            del.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+            del.onclick = () => {
+              state.participants = state.participants.filter(x => x.id !== p.id);
+              saveStorage();
+              renderAll();
+            };
+
+            ctrl.append(wBox, del);
+            row.append(toggleBtn, ctrl);
+            listEl.appendChild(row);
+          });
+        }
+
+        const restoreBtn = document.getElementById('restore-all-btn');
+        const inactiveCount = state.participants.length - active.length;
+        if (inactiveCount > 0) {
+          restoreBtn.classList.remove('hidden');
+          restoreBtn.textContent = `제외된 참가자 모두 복원 (${inactiveCount}명)`;
+          restoreBtn.disabled = state.running;
+        } else {
+          restoreBtn.classList.add('hidden');
+        }
+
+        const modeInfo = GAME_MODES.find(m => m.id === state.mode) || GAME_MODES[0];
+        document.getElementById('stage-title').textContent = modeInfo.label;
+        document.getElementById('stage-desc').textContent = modeInfo.desc;
+        document.getElementById('stage-meta').textContent = `참여 인원 ${active.length}명 · 당첨 ${Math.min(state.winnerCount, Math.max(1, active.length))}명 추첨`;
+      }
+
+      // =====================================================
+      // GAME 1: WHEEL
+      // =====================================================
+      function mountWheelGame(container) {
+        const players = getActive();
+        let rotation = 0;
+        let flapperKick = 0;
+        let fastMode = false;
+        let rafId = null;
+        let pool = [...players];
+        let collected = [];
+
+        container.innerHTML = `
+          <div class="stage-toolbar">
+            <span id="wheel-status" class="stage-hint">가중치 비율대로 면적이 배분됩니다</span>
+            <button type="button" id="wheel-fast-btn" class="dark-chip-btn">빠른 회전 꺼짐</button>
+          </div>
+          <div class="wheel-readout">
+            <span id="wheel-readout-text" style="font-size:14px; color:#64748B;">시작 버튼을 눌러 룰렛을 돌려보세요</span>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="wheel-canvas"></canvas>
+          </div>
+          <div id="wheel-collected" class="winner-strip hidden"></div>
+          <div class="cta-center">
+            <button type="button" id="wheel-spin-btn" class="primary-cta">룰렛 돌리기</button>
+          </div>
+        `;
+
+        const canvas = document.getElementById('wheel-canvas');
+        const spinBtn = document.getElementById('wheel-spin-btn');
+        const fastBtn = document.getElementById('wheel-fast-btn');
+        const statusEl = document.getElementById('wheel-status');
+        const readoutEl = document.getElementById('wheel-readout-text');
+        const collectedEl = document.getElementById('wheel-collected');
+
+        spinBtn.disabled = players.length < 2;
+
+        function buildSlices(list) {
+          const totalW = list.reduce((s, p) => s + Math.max(1, p.weight), 0);
+          let cur = 0;
+          return list.map(p => {
+            const arc = (Math.max(1, p.weight) / totalW) * Math.PI * 2;
+            const s = { p, start: cur, end: cur + arc, mid: cur + arc / 2 };
+            cur += arc;
+            return s;
+          });
+        }
+
+        function getSliceAtTop(rot, slices) {
+          if (!slices.length) return null;
+          const ang = ((-Math.PI / 2 - rot) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+          for (const s of slices) {
+            if (ang >= s.start && ang < s.end) return s;
+          }
+          return slices[slices.length - 1];
+        }
+
+        function draw(list) {
+          const ctx = canvas.getContext('2d');
+          const size = 440;
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          if (canvas.width !== size * dpr) {
+            canvas.width = size * dpr;
+            canvas.height = size * dpr;
+          }
+          ctx.save();
+          ctx.scale(dpr, dpr);
+          ctx.clearRect(0, 0, size, size);
+
+          const cx = size / 2, cy = size / 2, r = 194;
+          const slices = buildSlices(list);
+
+          if (!slices.length) {
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.fillStyle = '#252B33';
+            ctx.fill();
+            ctx.fillStyle = '#94A3B8';
+            ctx.font = '600 15px "Noto Sans KR", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('참가자를 2명 이상 추가하세요', cx, cy);
+            ctx.restore();
+            return;
+          }
+
+          ctx.beginPath();
+          ctx.arc(cx, cy, r + 8, 0, Math.PI * 2);
+          ctx.fillStyle = '#0B0E12';
+          ctx.fill();
+
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(rotation);
+
+          for (const s of slices) {
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.arc(0, 0, r, s.start, s.end);
+            ctx.closePath();
+            ctx.fillStyle = s.p.color;
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255,255,255,0.88)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            if (s.end - s.start > 0.14) {
+              ctx.save();
+              ctx.rotate(s.mid);
+              ctx.fillStyle = '#FFFFFF';
+              const fSize = slices.length > 14 ? 11 : slices.length > 9 ? 13 : 15;
+              ctx.font = `700 ${fSize}px "Noto Sans KR", sans-serif`;
+              ctx.textAlign = 'right';
+              ctx.textBaseline = 'middle';
+              ctx.shadowColor = 'rgba(0,0,0,0.35)';
+              ctx.shadowBlur = 3;
+              const maxLen = slices.length > 12 ? 7 : 10;
+              const label = s.p.name.length > maxLen ? s.p.name.slice(0, maxLen - 1) + '…' : s.p.name;
+              ctx.fillText(label, r - 22, 0);
+              ctx.restore();
+            }
+          }
+
+          for (const s of slices) {
+            ctx.beginPath();
+            ctx.arc(Math.cos(s.start) * (r - 4), Math.sin(s.start) * (r - 4), 3.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fill();
+          }
+          ctx.restore();
+
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.lineWidth = 4;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(cx, cy, 26, 0, Math.PI * 2);
+          ctx.fillStyle = '#161615';
+          ctx.fill();
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+          ctx.fillStyle = '#E04F33';
+          ctx.fill();
+
+          ctx.save();
+          ctx.translate(cx, cy - r - 2);
+          ctx.rotate(flapperKick);
+          ctx.beginPath();
+          ctx.moveTo(-13, -16);
+          ctx.lineTo(13, -16);
+          ctx.lineTo(0, 16);
+          ctx.closePath();
+          ctx.fillStyle = '#E04F33';
+          ctx.fill();
+          ctx.lineWidth = 2.5;
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.stroke();
+          ctx.restore();
+
+          ctx.restore();
+        }
+
+        fastBtn.onclick = () => {
+          if (state.running) return;
+          fastMode = !fastMode;
+          fastBtn.classList.toggle('active', fastMode);
+          fastBtn.textContent = fastMode ? '빠른 회전 켜짐' : '빠른 회전 꺼짐';
+        };
+
+        function spinRound(currentList, targetTotal, roundNum) {
+          const slices = buildSlices(currentList);
+          const startRot = rotation;
+          const turns = fastMode ? 5 + Math.random() * 2 : 8 + Math.random() * 4;
+          const totalDelta = turns * Math.PI * 2 + Math.random() * Math.PI * 2;
+          const duration = fastMode ? 2200 : 4400;
+          const t0 = performance.now();
+          let lastId = null;
+
+          statusEl.textContent = targetTotal > 1 ? `${roundNum} / ${targetTotal}번째 추첨 중` : '룰렛 회전 중';
+
+          function frame(now) {
+            const t = Math.min((now - t0) / duration, 1);
+            const eased = 1 - Math.pow(1 - t, 4.2);
+            rotation = startRot + totalDelta * eased;
+            flapperKick *= 0.82;
+
+            const curSlice = getSliceAtTop(rotation, slices);
+            if (curSlice) {
+              readoutEl.innerHTML = `<div class="wheel-readout-box">${esc(curSlice.p.name)}</div>`;
+              if (lastId && lastId !== curSlice.p.id) {
+                flapperKick = -0.38;
+                Sound.tick(0.85 + (1 - t) * 0.4);
+              }
+              lastId = curSlice.p.id;
+            }
+            draw(currentList);
+
+            if (t < 1) {
+              rafId = requestAnimationFrame(frame);
+            } else {
+              flapperKick = 0;
+              draw(currentList);
+              const winSlice = getSliceAtTop(rotation, slices);
+              const winner = winSlice ? winSlice.p : currentList[0];
+              collected.push(winner);
+
+              collectedEl.classList.remove('hidden');
+              collectedEl.innerHTML = '<span style="font-size:12px;color:#94A3B8;">확정된 당첨자:</span>' +
+                collected.map(w => `<span class="mini-chip"><span class="dot" style="background:${w.color}"></span>${esc(w.name)}</span>`).join('');
+
+              if (collected.length < targetTotal && currentList.length > 1) {
+                const nextList = currentList.filter(p => p.id !== winner.id);
+                setTimeout(() => spinRound(nextList, targetTotal, roundNum + 1), 650);
+              } else {
+                setTimeout(() => {
+                  spinBtn.disabled = false;
+                  spinBtn.textContent = '룰렛 돌리기';
+                  fastBtn.disabled = false;
+                  completeDraw(collected);
+                }, 420);
+              }
+            }
+          }
+          rafId = requestAnimationFrame(frame);
+        }
+
+        spinBtn.onclick = () => {
+          if (state.running || players.length < 2) return;
+          state.running = true;
+          spinBtn.disabled = true;
+          spinBtn.textContent = '추첨 진행 중...';
+          fastBtn.disabled = true;
+          collected = [];
+          pool = [...players];
+          collectedEl.classList.add('hidden');
+          const targetTotal = Math.min(state.winnerCount, players.length);
+          renderShellUI();
+          spinRound(pool, targetTotal, 1);
+        };
+
+        draw(players);
+        return () => { if (rafId) cancelAnimationFrame(rafId); };
+      }
+
+      // =====================================================
+      // GAME 2: LADDER
+      // =====================================================
+      function mountLadderGame(container) {
+        const activePlayers = getActive().slice(0, 12);
+        const cols = activePlayers.length;
+        if (cols < 2) {
+          container.innerHTML = '<div style="padding:48px 16px;text-align:center;font-size:14px;color:#94A3B8;">사다리 타기를 진행하려면 참가자를 2명 이상 추가해 주세요.</div>';
+          return () => {};
+        }
+
+        const ROWS = 10;
+        let rungs = [];
+        let outcomes = [];
+        let activePaths = {};
+        let finishedMap = {};
+        let rafId = null;
+
+        function genRungs() {
+          const list = [];
+          for (let r = 0; r < ROWS; r++) {
+            let c = 0;
+            while (c < cols - 1) {
+              if (Math.random() < 0.45) {
+                list.push({ row: r, col: c });
+                c += 2;
+              } else {
+                c += 1;
+              }
+            }
+          }
+          for (let c = 0; c < cols - 1; c++) {
+            if (!list.some(rg => rg.col === c)) {
+              const cand = Array.from({ length: ROWS }, (_, i) => i).filter(
+                r => !list.some(rg => rg.row === r && (rg.col === c - 1 || rg.col === c + 1))
+              );
+              if (cand.length) {
+                list.push({ row: cand[Math.floor(Math.random() * cand.length)], col: c });
+              }
+            }
+          }
+          return list;
+        }
+
+        function genOutcomes() {
+          const safeWin = Math.min(state.winnerCount, cols);
+          const list = Array.from({ length: cols }, (_, i) => (i < safeWin ? '당첨' : '통과'));
+          for (let i = list.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [list[i], list[j]] = [list[j], list[i]];
+          }
+          return list;
+        }
+
+        rungs = genRungs();
+        outcomes = genOutcomes();
+
+        const svgW = Math.max(560, cols * 84);
+        const svgH = 340;
+        const padX = 48;
+        const topY = 24;
+        const botY = svgH - 24;
+        const colGap = (svgW - padX * 2) / (cols - 1);
+        const rowGap = (botY - topY) / (ROWS + 1);
+        const getX = c => padX + c * colGap;
+        const getY = r => topY + (r + 1) * rowGap;
+
+        function computePath(startCol) {
+          const pts = [{ x: getX(startCol), y: topY }];
+          let cur = startCol;
+          for (let r = 0; r < ROWS; r++) {
+            const y = getY(r);
+            pts.push({ x: getX(cur), y });
+            const right = rungs.find(rg => rg.row === r && rg.col === cur);
+            const left = rungs.find(rg => rg.row === r && rg.col === cur - 1);
+            if (right) { cur++; pts.push({ x: getX(cur), y }); }
+            else if (left) { cur--; pts.push({ x: getX(cur), y }); }
+          }
+          pts.push({ x: getX(cur), y: botY });
+          return { pts, endCol: cur };
+        }
+
+        container.innerHTML = `
+          <div class="stage-toolbar">
+            <span class="stage-hint">${getActive().length > 12 ? '최대 12명까지 표시됩니다 · 상단 이름을 눌러 개별 확인하거나 전체 추첨하세요' : '상단 이름을 눌러 개별 추적하거나, 전체 추첨으로 한 번에 확인하세요'}</span>
+            <div style="display:flex; gap:8px;">
+              <button type="button" id="lad-shuffle-btn" class="dark-chip-btn">결과 섞기</button>
+              <button type="button" id="lad-new-btn" class="dark-chip-btn">새 사다리</button>
+            </div>
+          </div>
+          <div class="ladder-scroll">
+            <div class="ladder-inner" style="min-width:${svgW}px;">
+              <div id="lad-top" class="ladder-row" style="grid-template-columns:repeat(${cols}, minmax(0, 1fr));"></div>
+              <svg id="lad-svg" viewBox="0 0 ${svgW} ${svgH}" class="ladder-svg"></svg>
+              <div id="lad-bot" class="ladder-row" style="grid-template-columns:repeat(${cols}, minmax(0, 1fr));"></div>
+            </div>
+          </div>
+          <div class="cta-center">
+            <button type="button" id="lad-all-btn" class="primary-cta">전체 결과 확인하기</button>
+          </div>
+        `;
+
+        const topRow = document.getElementById('lad-top');
+        const svgEl = document.getElementById('lad-svg');
+        const botRow = document.getElementById('lad-bot');
+        const allBtn = document.getElementById('lad-all-btn');
+        const shuffleBtn = document.getElementById('lad-shuffle-btn');
+        const newBtn = document.getElementById('lad-new-btn');
+
+        function renderBoard() {
+          topRow.innerHTML = '';
+          activePlayers.forEach((p, idx) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'ladder-top-btn';
+            btn.disabled = state.running;
+            const res = finishedMap[idx] !== undefined ? `<span class="ladder-top-res">→ ${esc(outcomes[finishedMap[idx]])}</span>` : '';
+            btn.innerHTML = `<span class="dot" style="background:${p.color};width:11px;height:11px;"></span><span class="ladder-top-name">${esc(p.name)}</span>${res}`;
+            btn.onclick = () => runTrace([idx], false);
+            topRow.appendChild(btn);
+          });
+
+          let svgHtml = '';
+          for (let c = 0; c < cols; c++) {
+            svgHtml += `<line x1="${getX(c)}" y1="${topY}" x2="${getX(c)}" y2="${botY}" stroke="#334155" stroke-width="4" stroke-linecap="round"/>`;
+          }
+          for (const rg of rungs) {
+            svgHtml += `<line x1="${getX(rg.col)}" y1="${getY(rg.row)}" x2="${getX(rg.col + 1)}" y2="${getY(rg.row)}" stroke="#475569" stroke-width="4" stroke-linecap="round"/>`;
+          }
+          Object.entries(activePaths).forEach(([colStr, pts]) => {
+            const pl = activePlayers[Number(colStr)];
+            if (!pl || pts.length < 2) return;
+            const str = pts.map(pt => `${pt.x},${pt.y}`).join(' ');
+            const head = pts[pts.length - 1];
+            svgHtml += `<polyline points="${str}" fill="none" stroke="${pl.color}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`;
+            svgHtml += `<circle cx="${head.x}" cy="${head.y}" r="6.5" fill="${pl.color}" stroke="#FFFFFF" stroke-width="2"/>`;
+          });
+          svgEl.innerHTML = svgHtml;
+
+          botRow.innerHTML = '';
+          outcomes.forEach((lbl, idx) => {
+            const inp = document.createElement('input');
+            inp.type = 'text';
+            inp.value = lbl;
+            inp.disabled = state.running;
+            inp.className = 'ladder-outcome-input' + (lbl.includes('당첨') ? ' win' : '');
+            inp.oninput = e => {
+              outcomes[idx] = e.target.value;
+              inp.className = 'ladder-outcome-input' + (e.target.value.includes('당첨') ? ' win' : '');
+            };
+            botRow.appendChild(inp);
+          });
+        }
+
+        function runTrace(startCols, fullMode) {
+          if (state.running) return;
+          state.running = true;
+          allBtn.disabled = true;
+          shuffleBtn.disabled = true;
+          newBtn.disabled = true;
+          renderShellUI();
+
+          const computed = startCols.map(sc => ({ startCol: sc, ...computePath(sc) }));
+          const dur = startCols.length === 1 ? 1500 : 2100;
+          const t0 = performance.now();
+          let lastStep = -1;
+
+          function frame(now) {
+            const t = Math.min((now - t0) / dur, 1);
+            computed.forEach(({ startCol, pts }) => {
+              let totalLen = 0;
+              const segs = [];
+              for (let i = 0; i < pts.length - 1; i++) {
+                const len = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y);
+                segs.push(len);
+                totalLen += len;
+              }
+              const target = totalLen * t;
+              let acc = 0;
+              const part = [pts[0]];
+              for (let i = 0; i < segs.length; i++) {
+                if (acc + segs[i] <= target) {
+                  part.push(pts[i + 1]);
+                  acc += segs[i];
+                } else {
+                  const r = (target - acc) / (segs[i] || 1);
+                  part.push({
+                    x: pts[i].x + (pts[i + 1].x - pts[i].x) * r,
+                    y: pts[i].y + (pts[i + 1].y - pts[i].y) * r
+                  });
+                  break;
+                }
+              }
+              activePaths[startCol] = part;
+            });
+
+            const bucket = Math.floor(t * 10);
+            if (bucket > lastStep && t < 1) {
+              lastStep = bucket;
+              Sound.step(bucket);
+            }
+            renderBoard();
+
+            if (t < 1) {
+              rafId = requestAnimationFrame(frame);
+            } else {
+              computed.forEach(({ startCol, endCol }) => { finishedMap[startCol] = endCol; });
+              renderBoard();
+              allBtn.disabled = false;
+              shuffleBtn.disabled = false;
+              newBtn.disabled = false;
+
+              if (fullMode) {
+                const prizeMap = {};
+                const winners = [];
+                computed.forEach(({ startCol, endCol }) => {
+                  const p = activePlayers[startCol];
+                  const lbl = outcomes[endCol] || '결과';
+                  prizeMap[p.id] = lbl;
+                  if (lbl.includes('당첨')) winners.push(p);
+                });
+                const finalW = winners.length > 0 ? winners : computed.map(c => activePlayers[c.startCol]);
+                setTimeout(() => completeDraw(finalW, prizeMap), 350);
+              } else {
+                const c = computed[0];
+                const p = activePlayers[c.startCol];
+                const lbl = outcomes[c.endCol] || '결과';
+                setTimeout(() => completeDraw([p], { [p.id]: lbl }), 300);
+              }
+            }
+          }
+          rafId = requestAnimationFrame(frame);
+        }
+
+        shuffleBtn.onclick = () => {
+          if (state.running) return;
+          for (let i = outcomes.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [outcomes[i], outcomes[j]] = [outcomes[j], outcomes[i]];
+          }
+          activePaths = {};
+          finishedMap = {};
+          renderBoard();
+        };
+
+        newBtn.onclick = () => {
+          if (state.running) return;
+          rungs = genRungs();
+          activePaths = {};
+          finishedMap = {};
+          renderBoard();
+        };
+
+        allBtn.onclick = () => runTrace(activePlayers.map((_, i) => i), true);
+
+        renderBoard();
+        return () => { if (rafId) cancelAnimationFrame(rafId); };
+      }
+
+      // =====================================================
+      // GAME 3: PINBALL RACE
+      // =====================================================
+      function mountPinballGame(container) {
+        const players = getActive();
+        const W = 640, H = 500, FINISH_Y = 466;
+        let lastWins = false;
+        let speed2x = false;
+        let spinAng = 0;
+        let rafId = null;
+        let marbles = [];
+        let finished = [];
+
+        const pegs = [];
+        for (let r = 0; r < 7; r++) {
+          const y = 92 + r * 44;
+          const off = r % 2 === 1;
+          const cols = off ? 8 : 9;
+          const ox = (W - (cols - 1) * 58) / 2;
+          for (let c = 0; c < cols; c++) {
+            const x = ox + c * 58;
+            if (r === 3 && (Math.abs(x - 210) < 42 || Math.abs(x - 430) < 42)) continue;
+            pegs.push({ x, y, r: 5.5 });
+          }
+        }
+
+        container.innerHTML = `
+          <div class="stage-toolbar">
+            <div class="seg-group">
+              <button type="button" id="pb-first-btn" class="seg-btn active">1등 당첨 (선착순)</button>
+              <button type="button" id="pb-last-btn" class="seg-btn">꼴찌 당첨 (최후)</button>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button type="button" id="pb-speed-btn" class="dark-chip-btn">1배속</button>
+              <button type="button" id="pb-reset-btn" class="dark-chip-btn">재배치</button>
+            </div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="pinball-canvas"></canvas>
+          </div>
+          <div id="pb-standings" class="winner-strip hidden"></div>
+          <div class="cta-center">
+            <button type="button" id="pb-start-btn" class="primary-cta">구슬 떨어뜨리기</button>
+          </div>
+        `;
+
+        const canvas = document.getElementById('pinball-canvas');
+        const firstBtn = document.getElementById('pb-first-btn');
+        const lastBtn = document.getElementById('pb-last-btn');
+        const speedBtn = document.getElementById('pb-speed-btn');
+        const resetBtn = document.getElementById('pb-reset-btn');
+        const startBtn = document.getElementById('pb-start-btn');
+        const standingsEl = document.getElementById('pb-standings');
+
+        startBtn.disabled = players.length < 2;
+
+        function initMarbles() {
+          const count = players.length;
+          const spread = Math.min(460, Math.max(180, count * 36));
+          const sx = (W - spread) / 2;
+          const sh = [...players];
+          for (let i = sh.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [sh[i], sh[j]] = [sh[j], sh[i]];
+          }
+          marbles = sh.map((p, idx) => {
+            const ratio = count > 1 ? idx / (count - 1) : 0.5;
+            return {
+              p,
+              x: sx + ratio * spread + (Math.random() - 0.5) * 14,
+              y: 26 + (idx % 2) * 14,
+              vx: (Math.random() - 0.5) * 1.4,
+              vy: Math.random() * 0.5,
+              r: count > 16 ? 10 : 12.5,
+              done: false,
+              stall: 0
+            };
+          });
+          finished = [];
+          standingsEl.classList.add('hidden');
+        }
+
+        function draw() {
+          const ctx = canvas.getContext('2d');
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          if (canvas.width !== W * dpr) {
+            canvas.width = W * dpr;
+            canvas.height = H * dpr;
+          }
+          ctx.save();
+          ctx.scale(dpr, dpr);
+          ctx.fillStyle = '#0F1318';
+          ctx.fillRect(0, 0, W, H);
+
+          ctx.strokeStyle = 'rgba(255,255,255,0.035)';
+          ctx.lineWidth = 1;
+          for (let gx = 80; gx < W; gx += 80) {
+            ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke();
+          }
+
+          ctx.strokeStyle = '#334155';
+          ctx.lineWidth = 6;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(14, 385); ctx.lineTo(220, FINISH_Y);
+          ctx.moveTo(W - 14, 385); ctx.lineTo(W - 220, FINISH_Y);
+          ctx.stroke();
+
+          ctx.strokeStyle = '#E04F33';
+          ctx.lineWidth = 3;
+          ctx.setLineDash([8, 6]);
+          ctx.beginPath(); ctx.moveTo(220, FINISH_Y); ctx.lineTo(W - 220, FINISH_Y); ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.fillStyle = '#94A3B8';
+          ctx.font = '600 11px "Noto Sans KR", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('결승선', W / 2, FINISH_Y + 20);
+
+          const spinners = [{ x: 210, y: 224, dir: 1 }, { x: 430, y: 224, dir: -1 }];
+          for (const sp of spinners) {
+            ctx.save();
+            ctx.translate(sp.x, sp.y);
+            ctx.rotate(spinAng * sp.dir);
+            ctx.strokeStyle = '#F59E0B';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(-32, 0); ctx.lineTo(32, 0);
+            ctx.moveTo(0, -32); ctx.lineTo(0, 32);
+            ctx.stroke();
+            ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFFFFF'; ctx.fill();
+            ctx.restore();
+          }
+
+          for (const pg of pegs) {
+            ctx.beginPath(); ctx.arc(pg.x, pg.y, pg.r, 0, Math.PI * 2);
+            ctx.fillStyle = '#475569'; ctx.fill();
+            ctx.beginPath(); ctx.arc(pg.x - 1.5, pg.y - 1.5, 2, 0, Math.PI * 2);
+            ctx.fillStyle = '#94A3B8'; ctx.fill();
+          }
+
+          for (const m of marbles) {
+            ctx.save();
+            ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+            ctx.fillStyle = m.p.color; ctx.fill();
+            ctx.lineWidth = 2; ctx.strokeStyle = m.done ? '#FDE047' : '#FFFFFF'; ctx.stroke();
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = `700 ${m.r > 11 ? 10 : 8}px "Noto Sans KR", sans-serif`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(m.p.name.slice(0, 2), m.x, m.y + 0.5);
+            ctx.restore();
+          }
+          ctx.restore();
+        }
+
+        function stepPhysics() {
+          const grav = 0.24, bounce = 0.72, fric = 0.996;
+          let sCool = 0;
+          spinAng += 0.045;
+          const spinners = [{ x: 210, y: 224, dir: 1 }, { x: 430, y: 224, dir: -1 }];
+
+          for (const m of marbles) {
+            if (m.done) continue;
+            m.vy += grav; m.vx *= fric; m.vy *= fric;
+            const spd = Math.hypot(m.vx, m.vy);
+            if (spd > 11) { m.vx = (m.vx / spd) * 11; m.vy = (m.vy / spd) * 11; }
+            m.x += m.vx; m.y += m.vy;
+
+            if (Math.hypot(m.vx, m.vy) < 0.25) {
+              m.stall++;
+              if (m.stall > 20) { m.vx += (Math.random() - 0.5) * 2.2; m.vy -= 1.2; m.stall = 0; }
+            } else m.stall = 0;
+
+            if (m.x - m.r < 14) { m.x = 14 + m.r; m.vx = Math.abs(m.vx) * bounce; }
+            else if (m.x + m.r > W - 14) { m.x = W - 14 - m.r; m.vx = -Math.abs(m.vx) * bounce; }
+
+            if (m.y > 375 && m.y < FINISH_Y + 5) {
+              const prog = (m.y - 385) / (FINISH_Y - 385);
+              if (prog >= 0) {
+                const lw = 14 + prog * (220 - 14);
+                const rw = W - 14 - prog * (220 - 14);
+                if (m.x - m.r < lw) { m.x = lw + m.r; m.vx = Math.abs(m.vx) * 0.65 + 1.1; }
+                if (m.x + m.r > rw) { m.x = rw - m.r; m.vx = -Math.abs(m.vx) * 0.65 - 1.1; }
+              }
+            }
+
+            for (const pg of pegs) {
+              const dx = m.x - pg.x, dy = m.y - pg.y, d = Math.hypot(dx, dy), minD = m.r + pg.r;
+              if (d < minD && d > 0.001) {
+                const nx = dx / d, ny = dy / d;
+                m.x += nx * (minD - d); m.y += ny * (minD - d);
+                const dot = m.vx * nx + m.vy * ny;
+                if (dot < 0) {
+                  m.vx = (m.vx - 2 * dot * nx) * bounce + (Math.random() - 0.5) * 0.35;
+                  m.vy = (m.vy - 2 * dot * ny) * bounce;
+                  if (sCool === 0 && Math.abs(dot) > 1.8) { Sound.bounce(Math.abs(dot)); sCool = 1; }
+                }
+              }
+            }
+
+            for (const sp of spinners) {
+              const base = spinAng * sp.dir;
+              for (let b = 0; b < 4; b++) {
+                const ang = base + (b * Math.PI) / 2;
+                for (const rd of [12, 24, 32]) {
+                  const bx = sp.x + Math.cos(ang) * rd, by = sp.y + Math.sin(ang) * rd;
+                  const dx = m.x - bx, dy = m.y - by, d = Math.hypot(dx, dy), minD = m.r + 4;
+                  if (d < minD && d > 0.001) {
+                    const nx = dx / d, ny = dy / d;
+                    m.x += nx * (minD - d); m.y += ny * (minD - d);
+                    m.vx = nx * 3.8 - Math.sin(ang) * sp.dir * 2.2;
+                    m.vy = ny * 3.8 + Math.cos(ang) * sp.dir * 2.2;
+                  }
+                }
+              }
+            }
+
+            if (m.y >= FINISH_Y) {
+              m.done = true; m.y = FINISH_Y + 8; m.vx = 0; m.vy = 0;
+              finished.push(m.p);
+              Sound.step(finished.length);
+              standingsEl.classList.remove('hidden');
+              standingsEl.innerHTML = '<span style="font-size:12px;color:#94A3B8;">통과 순서:</span>' +
+                finished.map((fp, i) => `<span class="mini-chip tabular-nums"><span style="color:#94A3B8;">${i + 1}.</span><span class="dot" style="background:${fp.color}"></span>${esc(fp.name)}</span>`).join('');
+            }
+          }
+
+          for (let i = 0; i < marbles.length; i++) {
+            for (let j = i + 1; j < marbles.length; j++) {
+              const a = marbles[i], b = marbles[j];
+              if (a.done || b.done) continue;
+              const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), minD = a.r + b.r;
+              if (d < minD && d > 0.001) {
+                const nx = dx / d, ny = dy / d, ov = (minD - d) * 0.5;
+                a.x -= nx * ov; a.y -= ny * ov; b.x += nx * ov; b.y += ny * ov;
+                const imp = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
+                if (imp > 0) {
+                  a.vx -= imp * 0.85 * nx; a.vy -= imp * 0.85 * ny;
+                  b.vx += imp * 0.85 * nx; b.vy += imp * 0.85 * ny;
+                }
+              }
+            }
+          }
+        }
+
+        firstBtn.onclick = () => {
+          if (state.running) return;
+          lastWins = false;
+          firstBtn.classList.add('active'); lastBtn.classList.remove('active');
+        };
+        lastBtn.onclick = () => {
+          if (state.running) return;
+          lastWins = true;
+          lastBtn.classList.add('active'); firstBtn.classList.remove('active');
+        };
+        speedBtn.onclick = () => {
+          speed2x = !speed2x;
+          speedBtn.classList.toggle('amber', speed2x);
+          speedBtn.textContent = speed2x ? '2배속 켜짐' : '1배속';
+        };
+        resetBtn.onclick = () => {
+          if (state.running) return;
+          initMarbles(); draw();
+        };
+
+        startBtn.onclick = () => {
+          if (state.running || players.length < 2) return;
+          state.running = true;
+          startBtn.disabled = true; startBtn.textContent = '레이스 진행 중...';
+          firstBtn.disabled = true; lastBtn.disabled = true; resetBtn.disabled = true;
+          initMarbles();
+          renderShellUI();
+
+          const targetW = Math.min(state.winnerCount, players.length);
+          function loop() {
+            const steps = speed2x ? 2 : 1;
+            for (let s = 0; s < steps; s++) stepPhysics();
+            draw();
+
+            const doneN = finished.length;
+            const stop = lastWins ? doneN >= players.length : doneN >= targetW;
+            if (!stop && doneN < players.length) {
+              rafId = requestAnimationFrame(loop);
+            } else {
+              const winners = lastWins ? finished.slice(-targetW).reverse() : finished.slice(0, targetW);
+              const prizeMap = {};
+              winners.forEach((w, i) => {
+                prizeMap[w.id] = lastWins ? `꼴찌 당첨 (${finished.length - i}등)` : `${i + 1}등 통과`;
+              });
+              startBtn.disabled = false; startBtn.textContent = '다시 레이스 시작';
+              firstBtn.disabled = false; lastBtn.disabled = false; resetBtn.disabled = false;
+              setTimeout(() => completeDraw(winners, prizeMap), 420);
+            }
+          }
+          rafId = requestAnimationFrame(loop);
+        };
+
+        initMarbles();
+        draw();
+        return () => { if (rafId) cancelAnimationFrame(rafId); };
+      }
+
+      // =====================================================
+      // GAME 4: GACHA CAPSULE
+      // =====================================================
+      function mountGachaGame(container) {
+        const players = getActive();
+        const targetTotal = Math.min(state.winnerCount, players.length);
+        let pool = [...players];
+        let revealed = [];
+        let phase = 'IDLE'; // IDLE | SHAKING | DROPPED | OPENED
+        let dialDeg = 0;
+        let currentWinner = null;
+
+        function pickWeighted(list) {
+          const total = list.reduce((s, p) => s + Math.max(1, p.weight), 0);
+          let r = Math.random() * total;
+          for (const p of list) {
+            r -= Math.max(1, p.weight);
+            if (r <= 0) return p;
+          }
+          return list[list.length - 1];
+        }
+
+        function render() {
+          const domeBalls = players.slice(0, 14).map((p, i) => `
+            <div class="gacha-ball" title="${esc(p.name)}" style="transform:rotate(${(i * 37) % 360}deg) translateY(${phase === 'SHAKING' ? (i % 2 === 0 ? -12 : -5) : 0}px);">
+              <div class="gacha-ball-top" style="background:${p.color};"></div>
+              <div class="gacha-ball-bot"></div>
+            </div>
+          `).join('');
+
+          let trayHtml = '<span style="font-size:12px;color:#64748B;">다이얼이나 버튼을 눌러 캡슐을 뽑으세요</span>';
+          if (phase === 'SHAKING') {
+            trayHtml = '<span style="font-size:14px;font-weight:600;color:#F59E0B;">캡슐이 굴러 나오는 중...</span>';
+          } else if (phase === 'DROPPED' && currentWinner) {
+            trayHtml = `
+              <button type="button" id="gc-open-cap" class="gacha-drop-btn">
+                <div class="gacha-drop-ball">
+                  <div class="gacha-ball-top" style="background:${currentWinner.color};"></div>
+                  <div class="gacha-ball-bot"></div>
+                </div>
+                <span style="font-size:12px;font-weight:600;color:#E04F33;">캡슐을 눌러 열어보세요</span>
+              </button>
+            `;
+          } else if (phase === 'OPENED' && currentWinner) {
+            trayHtml = `
+              <span style="font-size:12px;color:#94A3B8;">캡슐 개봉 결과</span>
+              <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:8px;background:#232A34;border:1px solid rgba(255,255,255,0.15);">
+                <span class="dot" style="background:${currentWinner.color};width:11px;height:11px;"></span>
+                <span style="font-family:var(--font-display);font-size:18px;font-weight:700;">${esc(currentWinner.name)}</span>
+              </div>
+            `;
+          }
+
+          container.innerHTML = `
+            <div class="stage-toolbar">
+              <span class="stage-hint tabular-nums">${revealed.length > 0 ? `뽑은 캡슐: ${revealed.length} / ${targetTotal}개` : `총 ${players.length}명의 캡슐이 기계 안에 있습니다`}</span>
+              ${revealed.length > 0 && revealed.length < targetTotal ? '<button type="button" id="gc-reset-btn" class="dark-chip-btn">처음부터</button>' : ''}
+            </div>
+
+            <div class="gacha-machine">
+              <div class="gacha-cap"></div>
+              <div class="gacha-dome ${phase === 'SHAKING' ? 'shaking' : ''}">
+                ${players.length ? domeBalls : '<span style="font-size:12px;color:#64748B;align-self:center;">참가자를 추가하세요</span>'}
+              </div>
+              <div class="gacha-body">
+                <button type="button" id="gc-dial-btn" class="gacha-dial" aria-label="캡슐 다이얼 돌리기" ${players.length < 2 || phase === 'SHAKING' || phase === 'DROPPED' || revealed.length >= targetTotal ? 'disabled' : ''}>
+                  <div class="gacha-dial-bar" style="transform:rotate(${dialDeg}deg);"></div>
+                  <div class="gacha-dial-center"></div>
+                </button>
+                <div class="gacha-tray">${trayHtml}</div>
+              </div>
+            </div>
+
+            ${revealed.length > 0 ? `<div class="winner-strip">${revealed.map((w, i) => `<span class="mini-chip tabular-nums"><span style="color:#94A3B8;">#${i + 1}</span><span class="dot" style="background:${w.color}"></span>${esc(w.name)}</span>`).join('')}</div>` : ''}
+
+            <div class="cta-center">
+              ${phase === 'DROPPED'
+                ? '<button type="button" id="gc-open-btn" class="primary-cta emerald">캡슐 열기</button>'
+                : `<button type="button" id="gc-crank-btn" class="primary-cta" ${players.length < 2 || phase === 'SHAKING' || revealed.length >= targetTotal ? 'disabled' : ''}>${phase === 'SHAKING' ? '뽑는 중...' : revealed.length > 0 ? '다음 캡슐 뽑기' : '캡슐 뽑기'}</button>`
+              }
+              ${targetTotal > 1 && revealed.length < targetTotal && phase !== 'SHAKING'
+                ? `<button type="button" id="gc-all-btn" class="dark-chip-btn" style="height:48px;padding:0 18px;font-size:13.5px;">남은 ${targetTotal - revealed.length}개 한 번에 뽑기</button>`
+                : ''
+              }
+            </div>
+          `;
+
+          const crank = () => {
+            if ((phase !== 'IDLE' && phase !== 'OPENED') || players.length < 2) return;
+            if (revealed.length === 0) {
+              state.running = true;
+              renderShellUI();
+            }
+            phase = 'SHAKING';
+            dialDeg += 180;
+            Sound.capsuleDrop();
+            currentWinner = pickWeighted(pool);
+            pool = pool.filter(p => p.id !== currentWinner.id);
+            render();
+            setTimeout(() => {
+              phase = 'DROPPED';
+              render();
+            }, 520);
+          };
+
+          const openCap = () => {
+            if (phase !== 'DROPPED' || !currentWinner) return;
+            Sound.flip();
+            phase = 'OPENED';
+            revealed.push(currentWinner);
+            render();
+            if (revealed.length >= targetTotal) {
+              setTimeout(() => completeDraw([...revealed]), 600);
+            }
+          };
+
+          const dialBtn = document.getElementById('gc-dial-btn');
+          const crankBtn = document.getElementById('gc-crank-btn');
+          const openBtn = document.getElementById('gc-open-btn');
+          const openCapEl = document.getElementById('gc-open-cap');
+          const resetBtn = document.getElementById('gc-reset-btn');
+          const allBtn = document.getElementById('gc-all-btn');
+
+          if (dialBtn) dialBtn.onclick = crank;
+          if (crankBtn) crankBtn.onclick = crank;
+          if (openBtn) openBtn.onclick = openCap;
+          if (openCapEl) openCapEl.onclick = openCap;
+          if (resetBtn) resetBtn.onclick = () => {
+            state.running = false;
+            pool = [...players]; revealed = []; phase = 'IDLE'; currentWinner = null;
+            renderShellUI(); render();
+          };
+          if (allBtn) allBtn.onclick = () => {
+            if (players.length < 2) return;
+            state.running = true;
+            renderShellUI();
+            while (revealed.length < targetTotal && pool.length > 0) {
+              const chosen = pickWeighted(pool);
+              revealed.push(chosen);
+              pool = pool.filter(p => p.id !== chosen.id);
+            }
+            Sound.capsuleDrop();
+            phase = 'OPENED';
+            currentWinner = revealed[revealed.length - 1];
+            render();
+            setTimeout(() => completeDraw([...revealed]), 480);
+          };
+        }
+
+        render();
+        return () => {};
+      }
+
+      // =====================================================
+      // GAME 5: MYSTERY CARDS
+      // =====================================================
+      function mountCardsGame(container) {
+        const players = getActive();
+        if (players.length < 2) {
+          container.innerHTML = '<div style="padding:48px 16px;text-align:center;font-size:14px;color:#94A3B8;">카드 뒤집기를 시작하려면 참가자를 2명 이상 추가해 주세요.</div>';
+          return () => {};
+        }
+
+        const targetTotal = Math.min(state.winnerCount, players.length);
+        let subMode = 'names'; // names | lucky
+        let cards = [];
+        let turnIdx = 0;
+        let roundDone = false;
+
+        function buildDeck() {
+          if (subMode === 'names') {
+            cards = players.map(p => ({
+              id: p.id, label: p.name, isWin: true, color: p.color, participant: p, flipped: false, pickedBy: null
+            }));
+          } else {
+            cards = players.map((_, i) => ({
+              id: 'c-' + i, label: i < targetTotal ? '당첨' : '통과', isWin: i < targetTotal, color: i < targetTotal ? '#E04F33' : '#475569', participant: null, flipped: false, pickedBy: null
+            }));
+          }
+          for (let i = cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cards[i], cards[j]] = [cards[j], cards[i]];
+          }
+          turnIdx = 0;
+          roundDone = false;
+        }
+
+        function render() {
+          const flippedCount = cards.filter(c => c.flipped).length;
+          const curPicker = players[turnIdx];
+
+          container.innerHTML = `
+            <div class="stage-toolbar">
+              <div class="seg-group">
+                <button type="button" id="cd-mode-names" class="seg-btn ${subMode === 'names' ? 'active' : ''}" ${state.running ? 'disabled' : ''}>이름 카드 뽑기</button>
+                <button type="button" id="cd-mode-lucky" class="seg-btn ${subMode === 'lucky' ? 'active' : ''}" ${state.running ? 'disabled' : ''}>당첨/꽝 복불복</button>
+              </div>
+              <button type="button" id="cd-shuffle-btn" class="dark-chip-btn" ${state.running ? 'disabled' : ''}>카드 다시 섞기</button>
+            </div>
+
+            <div class="turn-banner">
+              ${subMode === 'names'
+                ? `<span>원하는 카드를 ${targetTotal}장 뒤집어 당첨자를 확인하세요 (${flippedCount} / ${targetTotal})</span>`
+                : curPicker
+                  ? `<span style="color:#94A3B8;">현재 선택 차례:</span><span class="dot" style="background:${curPicker.color}"></span><strong style="color:#FFFFFF;">${esc(curPicker.name)}</strong>`
+                  : '<strong style="color:#10B981;">모든 순서 완료</strong>'
+              }
+            </div>
+
+            <div id="cards-grid" class="cards-grid"></div>
+
+            <div class="cta-center">
+              <button type="button" id="cd-auto-btn" class="primary-cta" ${roundDone || state.running ? 'disabled' : ''}>
+                ${subMode === 'names' ? `무작위 ${targetTotal}장 자동 뽑기` : '전체 카드 한 번에 공개'}
+              </button>
+            </div>
+          `;
+
+          const grid = document.getElementById('cards-grid');
+          cards.forEach((c, idx) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'card-btn' + (c.flipped ? ' flipped' : '');
+            btn.disabled = c.flipped || roundDone || state.running;
+            btn.innerHTML = `
+              <div class="card-inner">
+                <div class="card-face card-back">
+                  <span class="card-num tabular-nums">${String(idx + 1).padStart(2, '0')}</span>
+                  <span style="font-size:11px;">선택하기</span>
+                </div>
+                <div class="card-face card-front ${c.isWin ? '' : 'lose'}">
+                  ${c.pickedBy ? `<span style="font-size:11px;color:#64748B;">${esc(c.pickedBy.name)}</span>` : ''}
+                  <div style="display:flex;align-items:center;gap:6px;max-width:100%;">
+                    ${c.isWin ? `<span class="dot" style="background:${c.color}"></span>` : ''}
+                    <span class="card-front-name" style="color:${c.isWin ? (subMode === 'lucky' ? '#E04F33' : '#161615') : '#64748B'};">${esc(c.label)}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+            btn.onclick = () => {
+              if (roundDone || c.flipped || state.running) return;
+              Sound.flip();
+              if (subMode === 'names') {
+                if (cards.filter(x => x.flipped).length >= targetTotal) return;
+                c.flipped = true;
+                render();
+                const nowFlipped = cards.filter(x => x.flipped);
+                if (nowFlipped.length >= targetTotal) {
+                  roundDone = true;
+                  const winners = nowFlipped.map(x => x.participant).filter(Boolean);
+                  setTimeout(() => completeDraw(winners), 520);
+                }
+              } else {
+                const picker = players[turnIdx];
+                if (!picker) return;
+                c.flipped = true;
+                c.pickedBy = picker;
+                turnIdx++;
+                render();
+                const wins = cards.filter(x => x.flipped && x.isWin);
+                if (wins.length >= targetTotal || turnIdx >= players.length) {
+                  roundDone = true;
+                  const winners = wins.map(x => x.pickedBy).filter(Boolean);
+                  const prizeMap = {};
+                  winners.forEach(w => { prizeMap[w.id] = '당첨 카드 선택'; });
+                  setTimeout(() => completeDraw(winners, prizeMap), 520);
+                }
+              }
+            };
+            grid.appendChild(btn);
+          });
+
+          document.getElementById('cd-mode-names').onclick = () => {
+            if (state.running) return;
+            subMode = 'names'; buildDeck(); render();
+          };
+          document.getElementById('cd-mode-lucky').onclick = () => {
+            if (state.running) return;
+            subMode = 'lucky'; buildDeck(); render();
+          };
+          document.getElementById('cd-shuffle-btn').onclick = () => {
+            if (state.running) return;
+            buildDeck(); render();
+          };
+          document.getElementById('cd-auto-btn').onclick = () => {
+            if (roundDone || state.running) return;
+            state.running = true;
+            renderShellUI();
+            const unflipped = cards.map((c, i) => c.flipped ? -1 : i).filter(i => i !== -1);
+
+            if (subMode === 'names') {
+              const need = targetTotal - cards.filter(c => c.flipped).length;
+              const chosen = [];
+              for (let i = 0; i < need && unflipped.length; i++) {
+                const p = Math.floor(Math.random() * unflipped.length);
+                chosen.push(unflipped.splice(p, 1)[0]);
+              }
+              chosen.forEach((ci, step) => {
+                setTimeout(() => {
+                  Sound.flip();
+                  cards[ci].flipped = true;
+                  if (step === chosen.length - 1) {
+                    roundDone = true;
+                    render();
+                    const winners = cards.filter(c => c.flipped && c.participant).map(c => c.participant);
+                    setTimeout(() => completeDraw(winners), 480);
+                  } else render();
+                }, step * 260);
+              });
+            } else {
+              unflipped.forEach((ci, step) => {
+                const picker = players[turnIdx + step];
+                if (!picker) return;
+                setTimeout(() => {
+                  Sound.flip();
+                  cards[ci].flipped = true;
+                  cards[ci].pickedBy = picker;
+                  turnIdx++;
+                  if (step === unflipped.length - 1) {
+                    roundDone = true;
+                    render();
+                    const winners = cards.filter(c => c.flipped && c.isWin && c.pickedBy).map(c => c.pickedBy);
+                    const prizeMap = {};
+                    winners.forEach(w => { prizeMap[w.id] = '당첨 카드'; });
+                    setTimeout(() => completeDraw(winners, prizeMap), 480);
+                  } else render();
+                }, step * 200);
+              });
+            }
+          };
+        }
+
+        buildDeck();
+        render();
+        return () => {};
+      }
+
+      // Mount Active Game
+      function renderStage() {
+        if (state.cleanupGame) {
+          state.cleanupGame();
+          state.cleanupGame = null;
+        }
+        const stage = document.getElementById('game-stage');
+        if (state.mode === 'wheel') state.cleanupGame = mountWheelGame(stage);
+        else if (state.mode === 'ladder') state.cleanupGame = mountLadderGame(stage);
+        else if (state.mode === 'pinball') state.cleanupGame = mountPinballGame(stage);
+        else if (state.mode === 'gacha') state.cleanupGame = mountGachaGame(stage);
+        else if (state.mode === 'cards') state.cleanupGame = mountCardsGame(stage);
+      }
+
+      function renderAll() {
+        renderNav();
+        renderShellUI();
+        renderStage();
+      }
+
+      // Winner Modal
+      function openWinnerModal(record) {
+        const modal = document.getElementById('winner-modal');
+        document.getElementById('modal-meta').textContent = `${record.modeLabel} · 총 ${record.participantCount}명 중 추첨`;
+        const listEl = document.getElementById('modal-winners-list');
+        listEl.innerHTML = record.winners.map((w, i) => `
+          <div class="modal-winner-row">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+              <span class="dot" style="background:${w.color};width:12px;height:12px;"></span>
+              <span style="font-family:var(--font-display);font-size:18px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(w.name)}</span>
+            </div>
+            ${w.prize
+              ? `<span style="font-size:12px;font-weight:600;color:#E04F33;flex-shrink:0;">${esc(w.prize)}</span>`
+              : record.winners.length > 1
+                ? `<span class="tabular-nums" style="font-family:var(--font-mono);font-size:12px;color:#666661;">#${i + 1}</span>`
+                : ''
+            }
+          </div>
+        `).join('');
+
+        const exBtn = document.getElementById('modal-exclude-btn');
+        const winIds = new Set(record.winners.map(w => w.id));
+        const remCount = getActive().filter(p => !winIds.has(p.id)).length;
+        if (!state.excludeWinners && remCount >= 2) exBtn.classList.remove('hidden');
+        else exBtn.classList.add('hidden');
+
+        modal.classList.remove('hidden');
+      }
+
+      function closeWinnerModal() {
+        document.getElementById('winner-modal').classList.add('hidden');
+      }
+
+      // History Drawer
+      function renderHistory() {
+        document.getElementById('history-sub').textContent = `총 ${state.history.length}건의 추첨 결과`;
+        const body = document.getElementById('history-list');
+        const clrBtn = document.getElementById('clear-history-btn');
+        clrBtn.classList.toggle('hidden', state.history.length === 0);
+
+        if (state.history.length === 0) {
+          body.innerHTML = '<div style="padding:64px 16px;text-align:center;font-size:13.5px;color:#8E8E88;">아직 추첨 기록이 없습니다. 미니게임을 실행해 당첨자를 뽑아보세요.</div>';
+          return;
+        }
+
+        body.innerHTML = '';
+        state.history.forEach(rec => {
+          const card = document.createElement('div');
+          card.className = 'history-card';
+          const time = new Date(rec.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          card.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#666661;">
+              <span>${esc(rec.modeLabel)} · ${rec.participantCount}명 참여 · ${time}</span>
+              <button type="button" class="text-action copy-rec-btn">복사</button>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;">
+              ${rec.winners.map(w => `<span style="display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;"><span class="dot" style="background:${w.color}"></span>${esc(w.name)}${w.prize ? `<span style="font-size:12px;font-weight:500;color:#E04F33;">(${esc(w.prize)})</span>` : ''}</span>`).join('')}
+            </div>
+          `;
+          const copyBtn = card.querySelector('.copy-rec-btn');
+          copyBtn.onclick = () => {
+            const txt = `[${rec.modeLabel}] ${rec.winners.map(w => w.prize ? `${w.name}(${w.prize})` : w.name).join(', ')}`;
+            navigator.clipboard?.writeText(txt).catch(() => {});
+            copyBtn.textContent = '복사됨';
+            setTimeout(() => { copyBtn.textContent = '복사'; }, 1500);
+          };
+          body.appendChild(card);
+        });
+      }
+
+      // Wire Global Static Controls
+      document.getElementById('brand-btn').onclick = () => {
+        if (!state.running) { state.mode = 'wheel'; renderAll(); }
+      };
+
+      document.getElementById('mute-btn').onclick = () => {
+        state.muted = !state.muted;
+        renderShellUI();
+      };
+
+      document.getElementById('single-add-form').onsubmit = e => {
+        e.preventDefault();
+        if (state.running) return;
+        const inp = document.getElementById('single-name-input');
+        const parts = inp.value.split(/[,\n]+/).map(s => s.trim()).filter(Boolean);
+        if (parts.length) {
+          state.participants.push(...makeParticipants(parts, state.participants.length));
+          inp.value = '';
+          saveStorage();
+          renderAll();
+        }
+      };
+
+      const bulkBox = document.getElementById('bulk-add-box');
+      const singleForm = document.getElementById('single-add-form');
+      const toggleBulkBtn = document.getElementById('toggle-bulk-btn');
+      let bulkOpen = false;
+      toggleBulkBtn.onclick = () => {
+        bulkOpen = !bulkOpen;
+        bulkBox.classList.toggle('hidden', !bulkOpen);
+        singleForm.classList.toggle('hidden', bulkOpen);
+        toggleBulkBtn.textContent = bulkOpen ? '한 줄 입력으로 전환' : '여러 명 붙여넣기';
+      };
+      document.getElementById('bulk-cancel-btn').onclick = () => {
+        bulkOpen = false;
+        bulkBox.classList.add('hidden');
+        singleForm.classList.remove('hidden');
+        toggleBulkBtn.textContent = '여러 명 붙여넣기';
+      };
+      document.getElementById('bulk-confirm-btn').onclick = () => {
+        if (state.running) return;
+        const ta = document.getElementById('bulk-name-input');
+        const parts = ta.value.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+        if (parts.length) {
+          state.participants.push(...makeParticipants(parts, state.participants.length));
+          ta.value = '';
+          bulkOpen = false;
+          bulkBox.classList.add('hidden');
+          singleForm.classList.remove('hidden');
+          toggleBulkBtn.textContent = '여러 명 붙여넣기';
+          saveStorage();
+          renderAll();
+        }
+      };
+
+      document.getElementById('shuffle-list-btn').onclick = () => {
+        if (state.running) return;
+        for (let i = state.participants.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [state.participants[i], state.participants[j]] = [state.participants[j], state.participants[i]];
+        }
+        saveStorage();
+        renderAll();
+      };
+
+      document.getElementById('clear-list-btn').onclick = () => {
+        if (state.running) return;
+        state.participants = [];
+        saveStorage();
+        renderAll();
+      };
+
+      document.getElementById('restore-all-btn').onclick = () => {
+        if (state.running) return;
+        state.participants.forEach(p => { p.active = true; });
+        saveStorage();
+        renderAll();
+      };
+
+      document.getElementById('winner-minus-btn').onclick = () => {
+        if (state.running || state.winnerCount <= 1) return;
+        state.winnerCount--;
+        renderAll();
+      };
+
+      document.getElementById('winner-plus-btn').onclick = () => {
+        const maxW = Math.max(1, getActive().length);
+        if (state.running || state.winnerCount >= maxW) return;
+        state.winnerCount++;
+        renderAll();
+      };
+
+      document.getElementById('exclude-switch').onclick = () => {
+        state.excludeWinners = !state.excludeWinners;
+        renderShellUI();
+      };
+
+      const presetsRow = document.getElementById('presets-row');
+      PRESETS.forEach(pr => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'preset-btn';
+        btn.textContent = pr.label;
+        btn.onclick = () => {
+          if (state.running) return;
+          state.participants = makeParticipants(pr.names, 0);
+          saveStorage();
+          renderAll();
+        };
+        presetsRow.appendChild(btn);
+      });
+
+      // Modal Events
+      document.getElementById('modal-close-btn').onclick = closeWinnerModal;
+      document.getElementById('modal-replay-btn').onclick = () => {
+        closeWinnerModal();
+        renderStage();
+      };
+      document.getElementById('modal-exclude-btn').onclick = () => {
+        if (!state.latestRecord) return;
+        const winIds = new Set(state.latestRecord.winners.map(w => w.id));
+        state.participants.forEach(p => { if (winIds.has(p.id)) p.active = false; });
+        saveStorage();
+        closeWinnerModal();
+        renderAll();
+      };
+      document.getElementById('modal-copy-btn').onclick = () => {
+        if (!state.latestRecord) return;
+        const txt = `[${state.latestRecord.modeLabel}] 당첨 결과: ${state.latestRecord.winners.map(w => w.prize ? `${w.name} (${w.prize})` : w.name).join(', ')}`;
+        navigator.clipboard?.writeText(txt).catch(() => {});
+        const btn = document.getElementById('modal-copy-btn');
+        btn.textContent = '복사됨';
+        setTimeout(() => { btn.textContent = '결과 복사'; }, 1600);
+      };
+
+      // History Drawer Events
+      document.getElementById('open-history-btn').onclick = () => {
+        renderHistory();
+        document.getElementById('history-drawer').classList.remove('hidden');
+      };
+      document.getElementById('close-history-btn').onclick = () => {
+        document.getElementById('history-drawer').classList.add('hidden');
+      };
+      document.getElementById('clear-history-btn').onclick = () => {
+        state.history = [];
+        saveStorage();
+        renderHistory();
+        renderShellUI();
+      };
+
+      // Download clean standalone HTML
+      document.getElementById('download-html-btn').onclick = () => {
+        const clone = document.documentElement.cloneNode(true);
+        // Clear dynamic runtime DOM inside clone so downloaded HTML starts crisp
+        const stage = clone.querySelector('#game-stage');
+        if (stage) stage.innerHTML = '';
+        const list = clone.querySelector('#participant-list');
+        if (list) list.innerHTML = '';
+        const dNav = clone.querySelector('#desktop-nav');
+        if (dNav) dNav.innerHTML = '';
+        const mNav = clone.querySelector('#mobile-nav');
+        if (mNav) mNav.innerHTML = '';
+        const presets = clone.querySelector('#presets-row');
+        if (presets) presets.innerHTML = '<span class="preset-label">예시:</span>';
+        const modal = clone.querySelector('#winner-modal');
+        if (modal) modal.classList.add('hidden');
+        const drawer = clone.querySelector('#history-drawer');
+        if (drawer) drawer.classList.add('hidden');
+
+        const html = '<!doctype html>\n' + clone.outerHTML;
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'luckydraw.html';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      };
+
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
