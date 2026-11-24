@@ -1,0 +1,6 @@
+{
+  "name": "럭키드로우 아케이드",
+  "description": "룰렛, 사다리 타기, 핀볼 레이스, 캡슐 뽑기, 카드 뒤집기 등 5가지 인터랙티브 미니게임으로 공정하고 재미있게 당첨자를 뽑는 파티 추첨 스튜디오입니다.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
